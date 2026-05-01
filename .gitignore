@@ -1,0 +1,36 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# Java / Maven
+target/
+*.class
+*.log
+hs_err_pid*
+replay_pid*
+
+# Node / frontend
+node_modules/
+dist/
+build/
+.vite/
+.next/
+.nuxt/
+coverage/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Docker / runtime
+docker-data/
+logs/
+tmp/
+temp/
+
+# Generated files
+*.generated.*
