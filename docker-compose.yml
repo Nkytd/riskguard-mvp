@@ -1,0 +1,73 @@
+services:
+  backend:
+    build: .
+    container_name: riskguard-backend
+    profiles:
+      - app
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.4
+    container_name: riskguard-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123456
+      MYSQL_DATABASE: riskguard
+      MYSQL_USER: riskguard
+      MYSQL_PASSWORD: riskguard123
+      TZ: Asia/Shanghai
+    ports:
+      - "${RISKGUARD_MYSQL_PORT:-3306}:3306"
+    volumes:
+      - riskguard-mysql-data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7.4
+    container_name: riskguard-redis
+    ports:
+      - "${RISKGUARD_REDIS_PORT:-6379}:6379"
+    volumes:
+      - riskguard-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: riskguard-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: riskguard
+      RABBITMQ_DEFAULT_PASS: riskguard123
+    ports:
+      - "${RISKGUARD_RABBITMQ_PORT:-5672}:5672"
+      - "${RISKGUARD_RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    volumes:
+      - riskguard-rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  riskguard-mysql-data:
+  riskguard-redis-data:
+  riskguard-rabbitmq-data:

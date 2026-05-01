@@ -1,0 +1,44 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: riskguard-mvp
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/riskguard?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: riskguard
+    password: riskguard123
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      timeout: 3s
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: riskguard
+    password: riskguard123
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: auto
+
+knife4j:
+  enable: true
+
+logging:
+  level:
+    root: info
+    com.riskguard: debug
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId}] %logger{36} - %msg%n"
+
+riskguard:
+  security:
+    jwt-secret: "riskguard-local-development-secret-change-me"
+    jwt-expire-minutes: 120
