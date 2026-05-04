@@ -1,6 +1,6 @@
 <template>
-  <section class="rules-workspace cases-workspace">
-    <section class="panel rules-list-panel">
+  <section class="management-workspace cases-workspace">
+    <section class="panel management-list-panel">
       <div class="panel-header">
         <h2>Case Queue</h2>
         <span>{{ page.total }} total</span>
@@ -32,7 +32,7 @@
         <span v-for="item in 8" :key="item" />
       </div>
 
-      <div v-else class="table-wrap rules-table-wrap">
+      <div v-else class="table-wrap management-table-wrap">
         <table class="data-table selectable-table">
           <thead>
             <tr>
@@ -76,7 +76,7 @@
       </div>
     </section>
 
-    <section class="panel rule-editor-panel">
+    <section class="panel management-detail-panel">
       <div class="panel-header">
         <h2>Case Detail</h2>
         <span>{{ selected ? `${selected.status} / ${selected.riskLevel}` : 'No selection' }}</span>

@@ -431,7 +431,7 @@ button {
   text-align: center;
 }
 
-.rules-workspace {
+.management-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
   gap: 16px;
@@ -469,7 +469,7 @@ button {
   box-shadow: none;
 }
 
-.rules-table-wrap {
+.management-table-wrap {
   height: 560px;
 }
 
@@ -616,7 +616,7 @@ button {
   font-size: 13px;
 }
 
-.rule-form {
+.management-form {
   display: grid;
   gap: 12px;
 }
@@ -889,7 +889,7 @@ button {
   .metric-grid,
   .chart-grid,
   .content-grid,
-  .rules-workspace {
+  .management-workspace {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -931,7 +931,7 @@ button {
   .metric-grid,
   .chart-grid,
     .content-grid,
-    .rules-workspace,
+    .management-workspace,
     .filter-bar,
     .list-filter-bar,
     .decision-filter-bar,
@@ -946,7 +946,7 @@ button {
     height: 280px;
   }
 
-  .rules-table-wrap {
+  .management-table-wrap {
     height: 420px;
   }
 

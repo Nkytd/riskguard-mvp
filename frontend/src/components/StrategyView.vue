@@ -1,6 +1,6 @@
 <template>
-  <section class="rules-workspace">
-    <section class="panel rules-list-panel">
+  <section class="management-workspace">
+    <section class="panel management-list-panel">
       <div class="panel-header">
         <h2>Strategy Catalog</h2>
         <span>{{ page.total }} total</span>
@@ -36,7 +36,7 @@
         <span v-for="item in 8" :key="item" />
       </div>
 
-      <div v-else class="table-wrap rules-table-wrap">
+      <div v-else class="table-wrap management-table-wrap">
         <table class="data-table selectable-table">
           <thead>
             <tr>
@@ -76,7 +76,7 @@
       </div>
     </section>
 
-    <section class="panel rule-editor-panel">
+    <section class="panel management-detail-panel">
       <div class="panel-header">
         <h2>{{ form.id ? 'Strategy Detail' : 'New Strategy' }}</h2>
         <span>{{ form.id ? `${form.status} / v${form.version}` : 'Draft' }}</span>
@@ -86,7 +86,7 @@
         {{ feedback.message }}
       </div>
 
-      <form class="rule-form" @submit.prevent="save">
+      <form class="management-form" @submit.prevent="save">
         <label class="form-field">
           <span>Strategy Code</span>
           <input v-model.trim="form.strategyCode" class="text-input" :disabled="Boolean(form.id)" />
