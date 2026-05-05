@@ -389,6 +389,7 @@ button {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
+  table-layout: auto;
 }
 
 .data-table th,
@@ -397,6 +398,7 @@ button {
   border-bottom: 1px solid var(--border);
   text-align: left;
   vertical-align: middle;
+  overflow-wrap: anywhere;
 }
 
 .data-table th {
@@ -423,12 +425,15 @@ button {
 .mono-cell {
   font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
   font-size: 12px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .empty-table {
   height: 220px;
   color: var(--muted);
   text-align: center;
+  white-space: normal;
 }
 
 .management-workspace {
@@ -773,6 +778,7 @@ button {
   margin: 0;
   color: #1d2526;
   font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
 .decisions-workspace {
@@ -829,6 +835,8 @@ button {
   color: #35413e;
   font-size: 13px;
   line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .hit-rule-table-wrap {
@@ -948,6 +956,16 @@ button {
 
   .management-table-wrap {
     height: 420px;
+  }
+
+  .data-table {
+    min-width: 680px;
+  }
+
+  .detail-list div,
+  .decision-detail-list div {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 
   .binding-table-wrap {
