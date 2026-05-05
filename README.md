@@ -165,6 +165,7 @@ Frontend build and aggregate acceptance check:
 
 ```powershell
 cd frontend
+npm test
 npm run build
 cd ..
 .\scripts\smoke\run-frontend-acceptance.ps1 -BaseUrl http://localhost:8080
