@@ -1,9 +1,9 @@
 # RiskGuard 当前项目上下文交接
 
-更新时间：2026-05-05  
-当前开发分支：`codex/riskguard-mvp`  
-当前 HEAD：`c86f84e style: harden console table wrapping`  
-基线分支：`main`，当前指向 `baf6fec feat: implement RiskGuard backend MVP`  
+更新时间：2026-05-05
+当前开发分支：`codex/riskguard-mvp`
+当前 HEAD：`c86f84e style: harden console table wrapping`
+基线分支：`main`，当前指向 `baf6fec feat: implement RiskGuard backend MVP`
 远端仓库：`https://github.com/Nkytd/riskguard-mvp.git`
 
 建议下次新会话入口：先阅读本文，再按“下一步建议”继续处理 PR、前端体验增强或测试体系建设。

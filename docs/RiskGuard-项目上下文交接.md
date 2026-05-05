@@ -1,9 +1,9 @@
 # RiskGuard 项目上下文交接
 
-版本：v0.1  
-日期：2026-05-01  
-分支：`codex/riskguard-mvp`  
-最新提交：`baf6fec feat: implement RiskGuard backend MVP`  
+版本：v0.1
+日期：2026-05-01
+分支：`codex/riskguard-mvp`
+最新提交：`baf6fec feat: implement RiskGuard backend MVP`
 远程仓库：`https://github.com/Nkytd/riskguard-mvp.git`
 
 ## 1. 项目定位
