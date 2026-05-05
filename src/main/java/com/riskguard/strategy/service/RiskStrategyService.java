@@ -79,8 +79,11 @@ public class RiskStrategyService extends ServiceImpl<RiskStrategyMapper, RiskStr
     @Transactional
     public RiskStrategyResponse updateStrategy(Long id, RiskStrategyUpdateRequest request) {
         RiskStrategy strategy = requireStrategy(id);
+        String previousEventType = strategy.getEventType();
         applyEditableFields(strategy, request.strategyName(), request.eventType(), request.grayRatio(), request.description());
         updateById(strategy);
+        riskCacheService.evictActiveStrategy(previousEventType);
+        riskCacheService.evictActiveStrategy(strategy.getEventType());
         return RiskStrategyResponse.from(requireStrategy(id));
     }
 
@@ -181,6 +184,9 @@ public class RiskStrategyService extends ServiceImpl<RiskStrategyMapper, RiskStr
                 .eq(RiskStrategyRule::getStrategyId, strategyId)
                 .orderByAsc(RiskStrategyRule::getExecuteOrder)
                 .orderByAsc(RiskStrategyRule::getId));
+        if (relations.isEmpty()) {
+            return List.of();
+        }
         Map<Long, RiskRule> rules = riskRuleMapper.selectBatchIds(relations.stream().map(RiskStrategyRule::getRuleId).toList())
                 .stream()
                 .collect(Collectors.toMap(RiskRule::getId, Function.identity()));
@@ -252,6 +258,7 @@ public class RiskStrategyService extends ServiceImpl<RiskStrategyMapper, RiskStr
         RiskStrategy strategy = requireStrategy(id);
         strategy.setStatus(status.name());
         updateById(strategy);
+        riskCacheService.evictActiveStrategy(strategy.getEventType());
         return RiskStrategyResponse.from(requireStrategy(id));
     }
 

@@ -16,6 +16,7 @@ import com.riskguard.engine.model.DecisionEngineResult;
 import com.riskguard.engine.model.DecisionOutcome;
 import com.riskguard.engine.model.RuleEvaluationResult;
 import com.riskguard.engine.resolver.DecisionResolver;
+import com.riskguard.mq.publisher.RiskEventPublisher;
 import com.riskguard.riskcase.service.RiskCaseService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +33,7 @@ public class RiskDecisionService {
     private final DecisionResolver decisionResolver;
     private final DecisionPersistenceService decisionPersistenceService;
     private final RiskCaseService riskCaseService;
+    private final RiskEventPublisher riskEventPublisher;
 
     public RiskDecisionService(RiskCacheService riskCacheService,
                                ActiveStrategyLoader activeStrategyLoader,
@@ -39,7 +41,8 @@ public class RiskDecisionService {
                                DecisionEngine decisionEngine,
                                DecisionResolver decisionResolver,
                                DecisionPersistenceService decisionPersistenceService,
-                               RiskCaseService riskCaseService) {
+                               RiskCaseService riskCaseService,
+                               RiskEventPublisher riskEventPublisher) {
         this.riskCacheService = riskCacheService;
         this.activeStrategyLoader = activeStrategyLoader;
         this.riskContextBuilder = riskContextBuilder;
@@ -47,6 +50,7 @@ public class RiskDecisionService {
         this.decisionResolver = decisionResolver;
         this.decisionPersistenceService = decisionPersistenceService;
         this.riskCaseService = riskCaseService;
+        this.riskEventPublisher = riskEventPublisher;
     }
 
     @Transactional
@@ -68,6 +72,7 @@ public class RiskDecisionService {
         String caseNo = riskCaseService.createCaseIfReview(request, response).orElse(null);
         RiskDecisionResponse finalResponse = withCaseNo(response, caseNo);
         riskCacheService.putIdempotentDecision(request.requestNo(), finalResponse);
+        riskEventPublisher.publishDecisionCreated(request, finalResponse);
         return finalResponse;
     }
 
