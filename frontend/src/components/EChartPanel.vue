@@ -10,17 +10,30 @@
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import * as echarts from 'echarts'
-import type { EChartsOption } from 'echarts'
+import { BarChart, LineChart, PieChart } from 'echarts/charts'
+import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
+import * as echarts from 'echarts/core'
+import type { EChartsCoreOption, EChartsType } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+
+echarts.use([
+  BarChart,
+  GridComponent,
+  LegendComponent,
+  LineChart,
+  PieChart,
+  TooltipComponent,
+  CanvasRenderer,
+])
 
 const props = defineProps<{
   title: string
   caption?: string
-  option: EChartsOption
+  option: EChartsCoreOption
 }>()
 
 const chartElement = ref<HTMLDivElement | null>(null)
-let chart: echarts.ECharts | null = null
+let chart: EChartsType | null = null
 
 const render = () => {
   if (!chartElement.value) {

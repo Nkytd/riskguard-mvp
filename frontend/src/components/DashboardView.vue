@@ -138,7 +138,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { Avatar, Collection, DataAnalysis, DataBoard, DocumentChecked, FolderOpened, RefreshRight, SwitchButton, Tickets } from '@element-plus/icons-vue'
-import type { EChartsOption } from 'echarts'
+import type { EChartsCoreOption } from 'echarts/core'
 import CasesView from './CasesView.vue'
 import DecisionsView from './DecisionsView.vue'
 import EChartPanel from './EChartPanel.vue'
@@ -234,9 +234,9 @@ const metricItems = computed(() => {
   ]
 })
 
-const trendOption = computed<EChartsOption>(() => {
+const trendOption = computed<EChartsCoreOption>(() => {
   const rows = dashboard.value?.riskTrend ?? []
-  const option: EChartsOption = {
+  const option: EChartsCoreOption = {
     color: ['#256f63', '#c45a3c', '#6d5bd0'],
     tooltip: { trigger: 'axis' },
     legend: { top: 0 },
@@ -256,8 +256,8 @@ const trendOption = computed<EChartsOption>(() => {
   return option
 })
 
-const decisionOption = computed<EChartsOption>(() => {
-  const option: EChartsOption = {
+const decisionOption = computed<EChartsCoreOption>(() => {
+  const option: EChartsCoreOption = {
     color: ['#256f63', '#d3a02d', '#6d5bd0', '#c45a3c'],
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
     legend: { bottom: 0 },
@@ -275,7 +275,7 @@ const decisionOption = computed<EChartsOption>(() => {
   return option
 })
 
-const caseOption = computed<EChartsOption>(() => {
+const caseOption = computed<EChartsCoreOption>(() => {
   const cases = dashboard.value?.caseStatistics
   const data: Array<[string, number]> = cases
     ? [
@@ -286,7 +286,7 @@ const caseOption = computed<EChartsOption>(() => {
         ['Closed', cases.closedCount],
       ]
     : []
-  const option: EChartsOption = {
+  const option: EChartsCoreOption = {
     color: ['#256f63'],
     tooltip: { trigger: 'axis' },
     grid: { left: 42, right: 24, top: 24, bottom: 36 },
