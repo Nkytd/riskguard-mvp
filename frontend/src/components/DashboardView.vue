@@ -10,15 +10,30 @@
           <DataBoard class="nav-icon" />
           Dashboard
         </button>
-        <button :class="['nav-item', { active: activeView === 'rules' }]" type="button" @click="activeView = 'rules'">
+        <button
+          v-if="canManageConfig"
+          :class="['nav-item', { active: activeView === 'rules' }]"
+          type="button"
+          @click="activeView = 'rules'"
+        >
           <DocumentChecked class="nav-icon" />
           Rules
         </button>
-        <button :class="['nav-item', { active: activeView === 'strategies' }]" type="button" @click="activeView = 'strategies'">
+        <button
+          v-if="canManageConfig"
+          :class="['nav-item', { active: activeView === 'strategies' }]"
+          type="button"
+          @click="activeView = 'strategies'"
+        >
           <Tickets class="nav-icon" />
           Strategies
         </button>
-        <button :class="['nav-item', { active: activeView === 'lists' }]" type="button" @click="activeView = 'lists'">
+        <button
+          v-if="canManageConfig"
+          :class="['nav-item', { active: activeView === 'lists' }]"
+          type="button"
+          @click="activeView = 'lists'"
+        >
           <Collection class="nav-icon" />
           Lists
         </button>
@@ -130,7 +145,7 @@
       <StrategyView v-else-if="activeView === 'strategies'" />
       <ListsView v-else-if="activeView === 'lists'" />
       <DecisionsView v-else-if="activeView === 'decisions'" />
-      <CasesView v-else />
+      <CasesView v-else :user="user" />
     </main>
   </div>
 </template>
@@ -148,10 +163,11 @@ import StateBlock from './StateBlock.vue'
 import StrategyView from './StrategyView.vue'
 import { formatApiError, loadDashboard } from '../api/client'
 import type { AuthUser, DashboardData } from '../api/types'
+import { canManageRiskConfig } from '../permissions'
 
 type ConsoleView = 'dashboard' | 'rules' | 'strategies' | 'lists' | 'decisions' | 'cases'
 
-defineProps<{
+const props = defineProps<{
   user: AuthUser
 }>()
 
@@ -163,6 +179,7 @@ const activeView = ref<ConsoleView>('dashboard')
 const dashboard = ref<DashboardData | null>(null)
 const loading = ref(false)
 const error = ref('')
+const canManageConfig = computed(() => canManageRiskConfig(props.user))
 
 const pageTitle = computed(() => {
   switch (activeView.value) {

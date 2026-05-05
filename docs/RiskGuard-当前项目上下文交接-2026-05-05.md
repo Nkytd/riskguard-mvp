@@ -1,12 +1,12 @@
 # RiskGuard 当前项目上下文交接
 
-更新时间：2026-05-05（二次更新：PR 创建、自查与前端增强后）
-当前开发分支：`codex/riskguard-mvp`
-当前最新实现提交：`6faa97b build: split frontend vendor chunks`（本文档更新提交以 `git log -1` 为准）
-基线分支：`main`，当前指向 `baf6fec feat: implement RiskGuard backend MVP`
+更新时间：2026-05-05（三次更新：PR 合并与 AUDITOR 权限口径明确后）
+当前开发分支：`codex/riskguard-hardening`
+当前最新实现提交：以 `git log -1` 为准
+基线分支：`main`，当前指向 `68fce18 merge: integrate RiskGuard MVP frontend and hardening`
 远端仓库：`https://github.com/Nkytd/riskguard-mvp.git`
 
-建议下次新会话入口：先阅读本文，再按“下一步建议”继续处理 PR 最终合并、权限口径、MQ 重试/DLQ、Redis 缓存覆盖或前端路由等后续优化。
+建议下次新会话入口：先阅读本文，再按“下一步建议”继续处理 MQ 重试/DLQ、Redis 缓存覆盖、dashboard aggregate consumer 或前端路由等后续优化。
 
 ## 1. 项目定位
 
@@ -72,6 +72,7 @@ RiskGuard 是一个面向登录、支付场景的实时风控决策 MVP。
 
 - MVP 阶段不引入 AI、Flink、Elasticsearch，避免范围失控。
 - 管理端 API 受 JWT 保护；正式决策入口保持未鉴权，便于业务系统集成。
+- `AUDITOR` 明确为只读审计角色：可查看 Dashboard、决策日志、画像和案件，不允许规则/策略/名单管理、模拟决策或案件处置；案件写操作仅允许 `ADMIN` / `RISK_OPERATOR`。
 - 规则发布后生成 `risk_rule_version`。
 - 策略绑定的是规则版本，策略发布后生成 `risk_strategy_version`，并保存规则快照 JSON。
 - 决策执行使用已发布策略快照，避免规则编辑污染历史决策。
@@ -150,6 +151,7 @@ RiskGuard 是一个面向登录、支付场景的实时风控决策 MVP。
 - JWT 生成、校验与 filter。
 - `sys_user` 数据库用户认证。
 - 角色权限控制。
+- `AUDITOR` 权限口径已明确为只读审计员；前端按角色隐藏配置管理入口和案件处置动作。
 - 管理 API 受保护。
 - JWT service tests。
 
@@ -174,6 +176,7 @@ RiskGuard 是一个面向登录、支付场景的实时风控决策 MVP。
 - 新增 Vitest 前端单元测试，沉淀 API client 基础行为测试资产。
 - ECharts 按需导入并通过 Vite manualChunks 拆包，当前 `npm run build` 已无大 chunk warning。
 - 前端 build 和总验收通过。
+- 角色体验初步收口：`AUDITOR` 不展示规则、策略、名单配置入口，案件详情展示只读提示而非处置按钮。
 
 ## 5. 当前运行环境参考
 
@@ -325,8 +328,9 @@ $env:MAVEN_OPTS='-Dmaven.repo.local=.m2/repository'
 当前分支：
 
 ```text
-main                baf6fec feat: implement RiskGuard backend MVP
-codex/riskguard-mvp 6faa97b build: split frontend vendor chunks
+main                    68fce18 merge: integrate RiskGuard MVP frontend and hardening
+codex/riskguard-mvp     faf4ee5 docs: refresh RiskGuard handoff status
+codex/riskguard-hardening 当前权限口径收口分支
 ```
 
 远端已推送：
@@ -336,15 +340,13 @@ codex/riskguard-mvp 6faa97b build: split frontend vendor chunks
 
 PR 状态：
 
-- PR 已创建：`https://github.com/Nkytd/riskguard-mvp/pull/1`
-- base: `main`
-- compare: `codex/riskguard-mvp`
-- 最近一次确认：head 为 `6faa97b`，`mergeable_state = clean`
+- PR #1 内容已本地合并并推送到 `origin/main`，合并提交为 `68fce18`。
+- 后续增强从 `codex/riskguard-hardening` 继续。
 
 注意：
 
-- 当前本机没有 `gh` / `hub` CLI，PR 需要在 GitHub 页面创建。
-- `main` 是基线分支，指向 `baf6fec`，用于让 PR 展示阶段 5-8、验收脚本和体验整理的完整 diff。
+- 当前本机没有 `gh` / `hub` CLI。
+- `main` 已成为阶段 5-8、验收脚本和体验整理后的新基线。
 
 ## 9. 已知限制与注意事项
 
@@ -355,7 +357,7 @@ PR 状态：
 - `http://127.0.0.1:8080/` 是后端根路径，不是前端入口，未鉴权访问会返回 401；前端入口是 Vite 端口，如 `http://127.0.0.1:5174/`。
 - ECharts vendor chunk 约 545KB，已通过按需导入和 `manualChunks` 拆出独立包；当前 `chunkSizeWarningLimit=600`，构建无大 chunk warning。
 - 对照冻结版设计仍有工程化增强空间：
-  - `AUDITOR` 是否允许处理案件需明确；当前案件写操作只允许 `ADMIN` / `RISK_OPERATOR`。
+  - `AUDITOR` 已明确为只读审计员；后续如要新增“审核员”写权限，建议新增独立角色而不是复用 `AUDITOR`。
   - Redis 目前主要覆盖幂等和 active strategy cache，名单/画像缓存尚未完全按冻结版落地。
   - RabbitMQ 已发布决策/案件事件并异步更新画像，但 dashboard aggregate 队列目前是预留绑定，Dashboard 仍走实时 SQL 聚合。
   - MQ 消费失败重试/DLQ 未显式配置，当前主要依赖 Spring AMQP 默认行为。
@@ -370,19 +372,10 @@ PR 状态：
 
 ### 高优先级
 
-1. 在 GitHub 页面最终 review / merge PR #1：
-   - PR：`https://github.com/Nkytd/riskguard-mvp/pull/1`
-   - base: `main`
-   - compare: `codex/riskguard-mvp`
-   - merge 前建议确认 PR 页面 checks / Files changed 无异常。
-
-2. 明确 `AUDITOR` 角色口径：
-   - 如果 AUDITOR 是审核员，应允许案件 claim/approve/reject/close。
-   - 如果 AUDITOR 是只读审计员，应更新命名或文档，避免和“审核员可以处理案件”冲突。
-
-3. 为 MQ 增加显式重试 / DLQ 配置：
+1. 为 MQ 增加显式重试 / DLQ 配置：
    - profile update consumer 失败可重试。
    - 后续 dashboard aggregate consumer 接入时也复用相同策略。
+2. 合并并推送 `codex/riskguard-hardening` 中的 `AUDITOR` 只读体验和文档收口。
 
 ### 中优先级
 
@@ -471,8 +464,9 @@ git -c http.proxy=http://127.0.0.1:7890 -c https.proxy=http://127.0.0.1:7890 pus
 
 ```text
 请阅读 docs/RiskGuard-当前项目上下文交接-2026-05-05.md，继续 RiskGuard 项目。
-当前 main 是基线分支，指向 baf6fec；codex/riskguard-mvp 是开发分支，最新实现提交 6faa97b，已推送到 origin。
-PR #1 已创建：https://github.com/Nkytd/riskguard-mvp/pull/1，最近确认 mergeable_state=clean。
+当前 main 是新基线分支，指向 68fce18；codex/riskguard-mvp 已合并进 main；codex/riskguard-hardening 用于后续工程韧性和权限体验增强。
+PR #1 内容已合并并推送到 origin/main。
 阶段 5 Dashboard、阶段 6 异步画像、阶段 7 认证权限、阶段 8 前端管理后台、前端空态/错误态、Vitest 前端单测、Vite 拆包、前端总验收、受控写入验收和完整 smoke 都已完成。
-下一步请优先处理：PR 最终 review/merge、AUDITOR 案件权限口径、RabbitMQ 重试/DLQ、Redis 名单/画像缓存，或 dashboard aggregate consumer。
+AUDITOR 已明确为只读审计角色，案件处置仍仅允许 ADMIN / RISK_OPERATOR，前端已隐藏审计角色的配置入口和案件处置按钮。
+下一步请优先处理：RabbitMQ 重试/DLQ、Redis 名单/画像缓存，或 dashboard aggregate consumer。
 ```

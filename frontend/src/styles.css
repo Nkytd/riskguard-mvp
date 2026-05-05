@@ -203,6 +203,12 @@ button {
   color: #195c51;
 }
 
+.alert-info {
+  border: 1px solid rgba(46, 110, 166, 0.28);
+  background: rgba(46, 110, 166, 0.08);
+  color: #235985;
+}
+
 .login-button span,
 .nav-item {
   display: inline-flex;

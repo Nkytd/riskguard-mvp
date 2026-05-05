@@ -132,6 +132,13 @@ Management APIs require:
 Authorization: Bearer <accessToken>
 ```
 
+Role policy:
+
+```text
+ADMIN / RISK_OPERATOR -> manage rules, strategies, lists, simulate decisions and handle cases
+AUDITOR               -> read Dashboard, decision logs, profiles and cases only
+```
+
 `POST /api/v1/risk/decisions` remains unauthenticated for MVP business-system integration.
 
 Example decision request:

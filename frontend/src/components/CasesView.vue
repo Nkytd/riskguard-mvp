@@ -151,7 +151,7 @@
           <p class="reason-box">{{ selected.auditOpinion || selected.aiSummary || 'No audit opinion' }}</p>
         </section>
 
-        <section class="version-section">
+        <section v-if="canHandleCaseActions" class="version-section">
           <div class="panel-header subheader">
             <h2>Action</h2>
             <span>Operator is current user</span>
@@ -181,6 +181,15 @@
               <FolderChecked class="button-icon" />
               <span>Close</span>
             </button>
+          </div>
+        </section>
+        <section v-else class="version-section">
+          <div class="panel-header subheader">
+            <h2>Action</h2>
+            <span>Read only</span>
+          </div>
+          <div class="alert alert-info" role="status">
+            AUDITOR can inspect cases and operation history. Workflow actions are reserved for ADMIN and RISK_OPERATOR.
           </div>
         </section>
 
@@ -249,9 +258,14 @@ import {
   markCaseFalsePositive,
   rejectCase,
 } from '../api/client'
-import type { CaseOperation, CaseStatus, RiskCase } from '../api/types'
+import type { AuthUser, CaseOperation, CaseStatus, RiskCase } from '../api/types'
+import { canHandleCases } from '../permissions'
 
 type CaseAction = 'claim' | 'approve' | 'reject' | 'falsePositive' | 'close'
+
+const props = defineProps<{
+  user: AuthUser
+}>()
 
 const statuses: CaseStatus[] = ['PENDING', 'PROCESSING', 'APPROVED', 'REJECTED', 'CLOSED']
 
@@ -280,6 +294,7 @@ const feedback = reactive({
 
 const totalPages = computed(() => Math.max(1, Math.ceil(page.total / page.pageSize)))
 const isFinished = computed(() => selected.value ? ['APPROVED', 'REJECTED', 'CLOSED'].includes(selected.value.status) : true)
+const canHandleCaseActions = computed(() => canHandleCases(props.user))
 
 async function load(pageNo = page.pageNo, keepSelection = true) {
   error.value = ''
@@ -343,7 +358,7 @@ async function selectCase(item: RiskCase) {
 }
 
 async function performAction(action: CaseAction) {
-  if (!selected.value) {
+  if (!selected.value || !canHandleCaseActions.value) {
     return
   }
   const message = actionMessages[action]
