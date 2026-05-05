@@ -1,12 +1,12 @@
 # RiskGuard 当前项目上下文交接
 
-更新时间：2026-05-05
+更新时间：2026-05-05（二次更新：PR 创建、自查与前端增强后）
 当前开发分支：`codex/riskguard-mvp`
-当前 HEAD：`c86f84e style: harden console table wrapping`
+当前最新实现提交：`6faa97b build: split frontend vendor chunks`（本文档更新提交以 `git log -1` 为准）
 基线分支：`main`，当前指向 `baf6fec feat: implement RiskGuard backend MVP`
 远端仓库：`https://github.com/Nkytd/riskguard-mvp.git`
 
-建议下次新会话入口：先阅读本文，再按“下一步建议”继续处理 PR、前端体验增强或测试体系建设。
+建议下次新会话入口：先阅读本文，再按“下一步建议”继续处理 PR 最终合并、权限口径、MQ 重试/DLQ、Redis 缓存覆盖或前端路由等后续优化。
 
 ## 1. 项目定位
 
@@ -58,6 +58,10 @@ RiskGuard 是一个面向登录、支付场景的实时风控决策 MVP。
 - 图标使用 `@element-plus/icons-vue`，未引入完整 Element Plus 组件库。
 - API 统一封装在 `frontend/src/api/client.ts`。
 - API 类型统一维护在 `frontend/src/api/types.ts`。
+- API 错误文案通过 `formatApiError` 统一处理，401/403 会清理本地 session。
+- 空态/错误态统一使用 `frontend/src/components/StateBlock.vue`。
+- 前端单测使用 Vitest，当前重点覆盖 API client 的 session、鉴权、查询参数和错误归一化。
+- ECharts 已改为按需注册，并通过 Vite `manualChunks` 拆出 `vue-vendor`、`element-icons`、`echarts-vendor`。
 - 登录态存储在 `localStorage`：
   - `riskguard.accessToken`
   - `riskguard.user`
@@ -166,6 +170,9 @@ RiskGuard 是一个面向登录、支付场景的实时风控决策 MVP。
 - 新增前端总验收脚本。
 - CSS 类名从 `rules-*` 泛化为 `management-*`。
 - 增强表格、详情、长文本、窄屏换行体验。
+- 系统化前端空态和错误态，新增统一 `StateBlock`。
+- 新增 Vitest 前端单元测试，沉淀 API client 基础行为测试资产。
+- ECharts 按需导入并通过 Vite manualChunks 拆包，当前 `npm run build` 已无大 chunk warning。
 - 前端 build 和总验收通过。
 
 ## 5. 当前运行环境参考
@@ -199,6 +206,7 @@ Docker 依赖常用端口：
 
 ```powershell
 cd frontend
+npm test
 npm run build
 cd ..
 
@@ -214,7 +222,8 @@ $env:MAVEN_OPTS='-Dmaven.repo.local=.m2/repository'
 
 验证结论：
 
-- `npm run build` 通过，仍有已知 Vite 大 chunk warning，主要来自 ECharts 和单包构建。
+- `npm test` 通过：1 file, 8 tests passed，覆盖 API client session、鉴权、查询参数和错误归一化。
+- `npm run build` 通过；ECharts 已按需注册并拆包，当前无 Vite 大 chunk warning。
 - 前端总验收通过，覆盖 dashboard、rules、strategies、lists、decisions、cases。
 - 受控写入验收通过，覆盖 Rules / Strategies / Lists / Cases 写操作。
 - `mvn test` 通过：10 tests, 0 failures, 0 errors, 0 skipped。
@@ -277,9 +286,11 @@ $env:MAVEN_OPTS='-Dmaven.repo.local=.m2/repository'
 - `frontend/src/styles.css`
 - `frontend/src/api/client.ts`
 - `frontend/src/api/types.ts`
+- `frontend/src/api/client.test.ts`
 - `frontend/src/components/LoginView.vue`
 - `frontend/src/components/DashboardView.vue`
 - `frontend/src/components/EChartPanel.vue`
+- `frontend/src/components/StateBlock.vue`
 - `frontend/src/components/RulesView.vue`
 - `frontend/src/components/StrategyView.vue`
 - `frontend/src/components/ListsView.vue`
@@ -315,7 +326,7 @@ $env:MAVEN_OPTS='-Dmaven.repo.local=.m2/repository'
 
 ```text
 main                baf6fec feat: implement RiskGuard backend MVP
-codex/riskguard-mvp c86f84e style: harden console table wrapping
+codex/riskguard-mvp 6faa97b build: split frontend vendor chunks
 ```
 
 远端已推送：
@@ -323,18 +334,12 @@ codex/riskguard-mvp c86f84e style: harden console table wrapping
 - `origin/main`
 - `origin/codex/riskguard-mvp`
 
-PR 创建方式：
+PR 状态：
 
-```text
-base: main
-compare: codex/riskguard-mvp
-```
-
-PR 链接：
-
-```text
-https://github.com/Nkytd/riskguard-mvp/compare/main...codex/riskguard-mvp?expand=1
-```
+- PR 已创建：`https://github.com/Nkytd/riskguard-mvp/pull/1`
+- base: `main`
+- compare: `codex/riskguard-mvp`
+- 最近一次确认：head 为 `6faa97b`，`mergeable_state = clean`
 
 注意：
 
@@ -347,7 +352,14 @@ https://github.com/Nkytd/riskguard-mvp/compare/main...codex/riskguard-mvp?expand
 - 前端未引入完整 UI 组件库，表单、表格、按钮为自定义样式。
 - 未做 token 自动刷新，JWT 过期后会清 session 并提示错误，需要重新登录。
 - seed 数据中的中文在部分终端和浏览器快照中可能显示乱码，疑似已有种子数据编码问题，不是前端引入。
-- Vite 仍有大 chunk warning，主要来自 ECharts 和当前单包构建，暂不影响功能。
+- `http://127.0.0.1:8080/` 是后端根路径，不是前端入口，未鉴权访问会返回 401；前端入口是 Vite 端口，如 `http://127.0.0.1:5174/`。
+- ECharts vendor chunk 约 545KB，已通过按需导入和 `manualChunks` 拆出独立包；当前 `chunkSizeWarningLimit=600`，构建无大 chunk warning。
+- 对照冻结版设计仍有工程化增强空间：
+  - `AUDITOR` 是否允许处理案件需明确；当前案件写操作只允许 `ADMIN` / `RISK_OPERATOR`。
+  - Redis 目前主要覆盖幂等和 active strategy cache，名单/画像缓存尚未完全按冻结版落地。
+  - RabbitMQ 已发布决策/案件事件并异步更新画像，但 dashboard aggregate 队列目前是预留绑定，Dashboard 仍走实时 SQL 聚合。
+  - MQ 消费失败重试/DLQ 未显式配置，当前主要依赖 Spring AMQP 默认行为。
+  - `risk_list.effect_type` 已建模，但决策链路主要通过规则表达式读取 `list.*Hit`，尚未形成通用名单加减分/放行机制。
 - 受控写入验收会写数据库：
   - 创建并禁用 `ACCEPT_` 规则和策略。
   - 创建并删除 `ACCEPT_` 名单。
@@ -358,30 +370,27 @@ https://github.com/Nkytd/riskguard-mvp/compare/main...codex/riskguard-mvp?expand
 
 ### 高优先级
 
-1. 在 GitHub 页面创建 PR：
+1. 在 GitHub 页面最终 review / merge PR #1：
+   - PR：`https://github.com/Nkytd/riskguard-mvp/pull/1`
    - base: `main`
    - compare: `codex/riskguard-mvp`
-   - 链接：`https://github.com/Nkytd/riskguard-mvp/compare/main...codex/riskguard-mvp?expand=1`
+   - merge 前建议确认 PR 页面 checks / Files changed 无异常。
 
-2. PR 自查：
-   - 检查 diff 是否符合阶段 5-8 和验收脚本边界。
-   - 确认无 `target/`、`.m2/`、`node_modules/`、`dist/`、日志文件进入 PR。
-   - 阅读 README 和交接文档是否足够清晰。
+2. 明确 `AUDITOR` 角色口径：
+   - 如果 AUDITOR 是审核员，应允许案件 claim/approve/reject/close。
+   - 如果 AUDITOR 是只读审计员，应更新命名或文档，避免和“审核员可以处理案件”冲突。
 
-3. 视需要更新 PR 描述：
-   - 后端阶段 5/6/7。
-   - 前端阶段 8。
-   - 验收脚本。
-   - 验证结果。
-   - 已知限制。
+3. 为 MQ 增加显式重试 / DLQ 配置：
+   - profile update consumer 失败可重试。
+   - 后续 dashboard aggregate consumer 接入时也复用相同策略。
 
 ### 中优先级
 
-1. 增加前端更系统的空态和错误态。
-2. 增加 Playwright 或前端单元测试。
-3. 优化表格列宽和移动端交互细节。
-4. 角色体验细化，例如菜单按角色显示。
-5. 将 Vite 大 chunk warning 通过动态 import 或 manualChunks 降低。
+1. 补 Redis 名单/画像缓存，严格对齐冻结版 Redis Key 设计。
+2. 接入 dashboard aggregate consumer 或明确 Dashboard MVP 使用实时 SQL 聚合。
+3. 角色体验细化，例如菜单按角色显示、按钮按权限隐藏。
+4. 优化表格列宽和移动端交互细节。
+5. 增加 Playwright 浏览器级 smoke，覆盖登录和主要页面首屏渲染。
 
 ### 低优先级
 
@@ -414,6 +423,7 @@ npm run dev
 
 ```powershell
 cd frontend
+npm test
 npm run build
 ```
 
@@ -461,8 +471,8 @@ git -c http.proxy=http://127.0.0.1:7890 -c https.proxy=http://127.0.0.1:7890 pus
 
 ```text
 请阅读 docs/RiskGuard-当前项目上下文交接-2026-05-05.md，继续 RiskGuard 项目。
-当前 main 是基线分支，指向 baf6fec；codex/riskguard-mvp 是开发分支，最新提交 c86f84e，已推送到 origin。
-阶段 5 Dashboard、阶段 6 异步画像、阶段 7 认证权限、阶段 8 前端管理后台、前端体验整理、前端总验收、受控写入验收和完整 smoke 都已完成。
-下一步请先协助创建/检查 GitHub PR：base=main，compare=codex/riskguard-mvp。
-如果 PR 已创建，请继续做 PR 自查、补充 PR 描述，并根据需要推进前端空态/错误态、Playwright 测试或 Vite 拆包。
+当前 main 是基线分支，指向 baf6fec；codex/riskguard-mvp 是开发分支，最新实现提交 6faa97b，已推送到 origin。
+PR #1 已创建：https://github.com/Nkytd/riskguard-mvp/pull/1，最近确认 mergeable_state=clean。
+阶段 5 Dashboard、阶段 6 异步画像、阶段 7 认证权限、阶段 8 前端管理后台、前端空态/错误态、Vitest 前端单测、Vite 拆包、前端总验收、受控写入验收和完整 smoke 都已完成。
+下一步请优先处理：PR 最终 review/merge、AUDITOR 案件权限口径、RabbitMQ 重试/DLQ、Redis 名单/画像缓存，或 dashboard aggregate consumer。
 ```
