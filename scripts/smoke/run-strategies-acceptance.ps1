@@ -27,7 +27,7 @@ Assert-CodeZero -Response $login -Name 'login'
 
 $headers = @{ Authorization = "Bearer $($login.data.accessToken)" }
 
-$page = Invoke-RestMethod -Uri "$BaseUrl/api/v1/strategies?pageNo=1&pageSize=10" -Method Get -Headers $headers -TimeoutSec 10
+$page = Invoke-RestMethod -Uri "$BaseUrl/api/v1/strategies?pageNo=1&pageSize=10&status=ENABLED" -Method Get -Headers $headers -TimeoutSec 10
 Assert-CodeZero -Response $page -Name 'strategies/page'
 
 if ($page.data.total -lt 1 -or @($page.data.records).Count -lt 1) {

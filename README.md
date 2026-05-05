@@ -206,6 +206,14 @@ Cases acceptance check:
 ./scripts/smoke/run-cases-acceptance.ps1 -BaseUrl http://localhost:8080
 ```
 
+Controlled write acceptance check:
+
+```powershell
+./scripts/smoke/run-write-acceptance.ps1 -BaseUrl http://localhost:8080
+```
+
+This script creates `ACCEPT_`-prefixed test data for rules, strategies, lists and cases. It disables the temporary rule and strategy, deletes the temporary list entry, and keeps the generated case as an audit trail.
+
 RabbitMQ management:
 
 ```text
