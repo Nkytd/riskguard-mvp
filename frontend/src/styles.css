@@ -430,10 +430,72 @@ button {
 }
 
 .empty-table {
-  height: 220px;
+  padding: 0;
+  white-space: normal;
+}
+
+.state-block {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px dashed #cbd6d1;
+  border-radius: 8px;
+  padding: 24px 18px;
+  background: #fbfcfb;
   color: var(--muted);
   text-align: center;
-  white-space: normal;
+}
+
+.state-block-compact {
+  min-height: 112px;
+  border: 0;
+  padding: 18px 12px;
+  background: transparent;
+}
+
+.state-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--muted);
+}
+
+.state-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.state-copy strong {
+  color: #35413e;
+  font-size: 14px;
+}
+
+.state-copy p {
+  max-width: 420px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.state-block-error {
+  border-color: rgba(196, 90, 60, 0.3);
+  background: rgba(196, 90, 60, 0.06);
+}
+
+.state-block-error .state-icon,
+.state-block-error .state-copy strong {
+  color: #8f351e;
+}
+
+.state-block-loading .state-icon {
+  animation: state-spin 0.9s linear infinite;
+}
+
+.state-action {
+  min-height: 34px;
 }
 
 .management-workspace {
@@ -862,6 +924,12 @@ button {
 
   100% {
     background-position: -100% 0;
+  }
+}
+
+@keyframes state-spin {
+  100% {
+    transform: rotate(360deg);
   }
 }
 

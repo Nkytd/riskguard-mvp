@@ -27,8 +27,16 @@
         </button>
       </form>
 
-      <div v-if="error" class="alert alert-error" role="alert">{{ error }}</div>
-      <div v-if="loading && page.records.length === 0" class="skeleton-panel compact-skeleton" aria-label="Loading cases">
+      <StateBlock
+        v-if="error && page.records.length === 0"
+        action-label="Retry"
+        :description="error"
+        title="Case queue unavailable"
+        variant="error"
+        @action="load(1, false)"
+      />
+      <div v-else-if="error" class="alert alert-error" role="alert">{{ error }}</div>
+      <div v-else-if="loading && page.records.length === 0" class="skeleton-panel compact-skeleton" aria-label="Loading cases">
         <span v-for="item in 8" :key="item" />
       </div>
 
@@ -63,7 +71,13 @@
               <td class="numeric">{{ item.assigneeId ?? '-' }}</td>
             </tr>
             <tr v-if="page.records.length === 0">
-              <td class="empty-table" colspan="5">No cases found</td>
+              <td class="empty-table" colspan="5">
+                <StateBlock
+                  compact
+                  description="Review decisions will create cases automatically when manual handling is needed."
+                  title="No cases found"
+                />
+              </td>
             </tr>
           </tbody>
         </table>
@@ -196,7 +210,13 @@
                   <td>{{ operation.remark || '-' }}</td>
                 </tr>
                 <tr v-if="operations.length === 0">
-                  <td class="empty-table compact-empty" colspan="4">No operations</td>
+                  <td class="empty-table compact-empty" colspan="4">
+                    <StateBlock
+                      compact
+                      description="Actions on this case will appear here as an audit trail."
+                      title="No operations"
+                    />
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -204,7 +224,12 @@
         </section>
       </template>
 
-      <p v-else class="empty-copy">Select a case to inspect its status and operation history.</p>
+      <StateBlock
+        v-else
+        compact
+        description="Pick a case from the queue to inspect status, audit action, and operation history."
+        title="No case selected"
+      />
     </section>
   </section>
 </template>
@@ -212,10 +237,12 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { Check, Close, FolderChecked, RefreshRight, Search, User, Warning } from '@element-plus/icons-vue'
+import StateBlock from './StateBlock.vue'
 import {
   approveCase,
   claimCase,
   closeCase,
+  formatApiError,
   loadCase,
   loadCaseOperations,
   loadCases,
@@ -280,7 +307,7 @@ async function load(pageNo = page.pageNo, keepSelection = true) {
       await selectCase(page.records[0])
     }
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load cases'
+    error.value = formatApiError(err, 'Failed to load cases')
   } finally {
     loading.value = false
   }
@@ -311,7 +338,7 @@ async function selectCase(item: RiskCase) {
     operations.value = rows
   } catch (err) {
     operations.value = []
-    setFeedback('error', err instanceof Error ? err.message : 'Failed to load case detail')
+    setFeedback('error', formatApiError(err, 'Failed to load case detail'))
   }
 }
 
@@ -336,7 +363,7 @@ async function performAction(action: CaseAction) {
     actionText.value = ''
     setFeedback('success', `${message} completed`)
   } catch (err) {
-    setFeedback('error', err instanceof Error ? err.message : `${message} failed`)
+    setFeedback('error', formatApiError(err, `${message} failed`))
   } finally {
     working.value = false
   }

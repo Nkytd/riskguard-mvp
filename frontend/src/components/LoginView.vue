@@ -29,7 +29,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 import { Promotion } from '@element-plus/icons-vue'
-import { login, saveSession } from '../api/client'
+import { formatApiError, login, saveSession } from '../api/client'
 import type { AuthUser } from '../api/types'
 
 const emit = defineEmits<{
@@ -55,7 +55,7 @@ async function submit() {
     saveSession(result.accessToken, result.user)
     emit('signedIn', result.user)
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Sign in failed'
+    error.value = formatApiError(err, 'Sign in failed')
   } finally {
     loading.value = false
   }

@@ -31,8 +31,16 @@
         </button>
       </form>
 
-      <div v-if="error" class="alert alert-error" role="alert">{{ error }}</div>
-      <div v-if="loading && page.records.length === 0" class="skeleton-panel compact-skeleton" aria-label="Loading strategies">
+      <StateBlock
+        v-if="error && page.records.length === 0"
+        action-label="Retry"
+        :description="error"
+        title="Strategies unavailable"
+        variant="error"
+        @action="load(1, false)"
+      />
+      <div v-else-if="error" class="alert alert-error" role="alert">{{ error }}</div>
+      <div v-else-if="loading && page.records.length === 0" class="skeleton-panel compact-skeleton" aria-label="Loading strategies">
         <span v-for="item in 8" :key="item" />
       </div>
 
@@ -63,7 +71,13 @@
               <td class="numeric">v{{ strategy.version }}</td>
             </tr>
             <tr v-if="page.records.length === 0">
-              <td class="empty-table" colspan="6">No strategies found</td>
+              <td class="empty-table" colspan="6">
+                <StateBlock
+                  compact
+                  description="Create a strategy or adjust filters to bring records back into view."
+                  title="No strategies found"
+                />
+              </td>
             </tr>
           </tbody>
         </table>
@@ -188,7 +202,13 @@
                 </td>
               </tr>
               <tr v-if="bindings.length === 0">
-                <td class="empty-table" colspan="5">No rules bound</td>
+                <td class="empty-table" colspan="5">
+                  <StateBlock
+                    compact
+                    description="Bind enabled rules before publishing this strategy."
+                    title="No rules bound"
+                  />
+                </td>
               </tr>
             </tbody>
           </table>
@@ -216,7 +236,12 @@
               Rollback
             </button>
           </article>
-          <p v-if="versions.length === 0" class="empty-copy">No published versions</p>
+          <StateBlock
+            v-if="versions.length === 0"
+            compact
+            description="Publish this strategy to create a versioned rule snapshot."
+            title="No published versions"
+          />
         </div>
       </section>
     </section>
@@ -226,11 +251,13 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { Check, EditPen, Plus, Search, Switch, Upload } from '@element-plus/icons-vue'
+import StateBlock from './StateBlock.vue'
 import {
   bindStrategyRule,
   createStrategy,
   disableStrategy,
   enableStrategy,
+  formatApiError,
   loadRules,
   loadStrategies,
   loadStrategy,
@@ -317,7 +344,7 @@ async function load(pageNo = page.pageNo, keepSelection = true) {
       await selectStrategy(page.records[0])
     }
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load strategies'
+    error.value = formatApiError(err, 'Failed to load strategies')
   } finally {
     loading.value = false
   }
@@ -379,7 +406,7 @@ async function save() {
     await selectStrategy(saved)
     setFeedback('success', form.id ? 'Strategy saved' : 'Strategy created')
   } catch (err) {
-    setFeedback('error', err instanceof Error ? err.message : 'Save failed')
+    setFeedback('error', formatApiError(err, 'Save failed'))
   } finally {
     working.value = false
   }
@@ -397,7 +424,7 @@ async function toggleStatus() {
     await load(page.pageNo, true)
     setFeedback('success', updated.status === 'ENABLED' ? 'Strategy enabled' : 'Strategy disabled')
   } catch (err) {
-    setFeedback('error', err instanceof Error ? err.message : 'Status update failed')
+    setFeedback('error', formatApiError(err, 'Status update failed'))
   } finally {
     working.value = false
   }
@@ -419,7 +446,7 @@ async function bindRule() {
     await loadBindings()
     setFeedback('success', 'Rule bound')
   } catch (err) {
-    setFeedback('error', err instanceof Error ? err.message : 'Bind failed')
+    setFeedback('error', formatApiError(err, 'Bind failed'))
   } finally {
     working.value = false
   }
@@ -443,7 +470,7 @@ async function saveBindings() {
     await loadBindings()
     setFeedback('success', 'Bindings saved')
   } catch (err) {
-    setFeedback('error', err instanceof Error ? err.message : 'Binding update failed')
+    setFeedback('error', formatApiError(err, 'Binding update failed'))
   } finally {
     working.value = false
   }
@@ -460,7 +487,7 @@ async function removeRule(ruleId: number) {
     await loadBindings()
     setFeedback('success', 'Rule binding removed')
   } catch (err) {
-    setFeedback('error', err instanceof Error ? err.message : 'Remove failed')
+    setFeedback('error', formatApiError(err, 'Remove failed'))
   } finally {
     working.value = false
   }
@@ -479,7 +506,7 @@ async function publish() {
     await Promise.all([load(page.pageNo, true), loadVersions()])
     setFeedback('success', 'Strategy published')
   } catch (err) {
-    setFeedback('error', err instanceof Error ? err.message : 'Publish failed')
+    setFeedback('error', formatApiError(err, 'Publish failed'))
   } finally {
     working.value = false
   }
@@ -498,7 +525,7 @@ async function rollback(version: number) {
     await Promise.all([load(page.pageNo, true), loadVersions()])
     setFeedback('success', `Rolled back to v${version}`)
   } catch (err) {
-    setFeedback('error', err instanceof Error ? err.message : 'Rollback failed')
+    setFeedback('error', formatApiError(err, 'Rollback failed'))
   } finally {
     working.value = false
   }

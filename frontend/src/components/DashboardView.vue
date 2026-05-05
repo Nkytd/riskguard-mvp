@@ -57,8 +57,16 @@
       </header>
 
       <template v-if="activeView === 'dashboard'">
-        <div v-if="error" class="alert alert-error" role="alert">{{ error }}</div>
-        <div v-if="loading && !dashboard" class="skeleton-panel" aria-label="Loading dashboard">
+        <StateBlock
+          v-if="error && !dashboard"
+          action-label="Retry"
+          :description="error"
+          title="Dashboard unavailable"
+          variant="error"
+          @action="load"
+        />
+        <div v-else-if="error" class="alert alert-error" role="alert">{{ error }}</div>
+        <div v-if="loading && !dashboard && !error" class="skeleton-panel" aria-label="Loading dashboard">
           <span v-for="item in 12" :key="item" />
         </div>
 
@@ -100,7 +108,13 @@
                       <td class="numeric">{{ formatNumber(item.totalScoreDelta) }}</td>
                     </tr>
                     <tr v-if="dashboard.ruleHitRank.length === 0">
-                      <td class="empty-table" colspan="4">No rule hits</td>
+                      <td class="empty-table" colspan="4">
+                        <StateBlock
+                          compact
+                          description="No rules have been hit in the current decision sample."
+                          title="No rule hits"
+                        />
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -130,8 +144,9 @@ import DecisionsView from './DecisionsView.vue'
 import EChartPanel from './EChartPanel.vue'
 import ListsView from './ListsView.vue'
 import RulesView from './RulesView.vue'
+import StateBlock from './StateBlock.vue'
 import StrategyView from './StrategyView.vue'
-import { loadDashboard } from '../api/client'
+import { formatApiError, loadDashboard } from '../api/client'
 import type { AuthUser, DashboardData } from '../api/types'
 
 type ConsoleView = 'dashboard' | 'rules' | 'strategies' | 'lists' | 'decisions' | 'cases'
@@ -188,7 +203,7 @@ async function load() {
   try {
     dashboard.value = await loadDashboard()
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load dashboard'
+    error.value = formatApiError(err, 'Failed to load dashboard')
   } finally {
     loading.value = false
   }

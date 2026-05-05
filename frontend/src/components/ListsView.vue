@@ -35,8 +35,16 @@
         </button>
       </form>
 
-      <div v-if="error" class="alert alert-error" role="alert">{{ error }}</div>
-      <div v-if="loading && page.records.length === 0" class="skeleton-panel compact-skeleton" aria-label="Loading list entries">
+      <StateBlock
+        v-if="error && page.records.length === 0"
+        action-label="Retry"
+        :description="error"
+        title="List entries unavailable"
+        variant="error"
+        @action="load(1, false)"
+      />
+      <div v-else-if="error" class="alert alert-error" role="alert">{{ error }}</div>
+      <div v-else-if="loading && page.records.length === 0" class="skeleton-panel compact-skeleton" aria-label="Loading list entries">
         <span v-for="item in 8" :key="item" />
       </div>
 
@@ -72,7 +80,13 @@
               <td>{{ formatDateTime(entry.updatedAt) }}</td>
             </tr>
             <tr v-if="page.records.length === 0">
-              <td class="empty-table" colspan="6">No list entries found</td>
+              <td class="empty-table" colspan="6">
+                <StateBlock
+                  compact
+                  description="Create a list entry or change filters to inspect existing controls."
+                  title="No list entries found"
+                />
+              </td>
             </tr>
           </tbody>
         </table>
@@ -191,11 +205,13 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { Delete, EditPen, Plus, Search, Switch } from '@element-plus/icons-vue'
+import StateBlock from './StateBlock.vue'
 import {
   createRiskList,
   deleteRiskList,
   disableRiskList,
   enableRiskList,
+  formatApiError,
   loadRiskList,
   loadRiskLists,
   updateRiskList,
@@ -277,7 +293,7 @@ async function load(pageNo = page.pageNo, keepSelection = true) {
       await selectEntry(page.records[0])
     }
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load list entries'
+    error.value = formatApiError(err, 'Failed to load list entries')
   } finally {
     loading.value = false
   }
@@ -296,8 +312,8 @@ async function selectEntry(entry: RiskList) {
   feedback.message = ''
   try {
     applyEntry(await loadRiskList(entry.id))
-  } catch {
-    setFeedback('error', 'Failed to refresh list detail')
+  } catch (err) {
+    setFeedback('error', formatApiError(err, 'Failed to refresh list detail'))
   }
 }
 
@@ -348,7 +364,7 @@ async function save() {
     await selectEntry(saved)
     setFeedback('success', isCreate ? 'List entry created' : 'List entry saved')
   } catch (err) {
-    setFeedback('error', err instanceof Error ? err.message : 'Save failed')
+    setFeedback('error', formatApiError(err, 'Save failed'))
   } finally {
     working.value = false
   }
@@ -366,7 +382,7 @@ async function toggleStatus() {
     await load(page.pageNo, true)
     setFeedback('success', updated.status === 'ENABLED' ? 'List entry enabled' : 'List entry disabled')
   } catch (err) {
-    setFeedback('error', err instanceof Error ? err.message : 'Status update failed')
+    setFeedback('error', formatApiError(err, 'Status update failed'))
   } finally {
     working.value = false
   }
@@ -383,7 +399,7 @@ async function removeEntry() {
     await load(1, false)
     setFeedback('success', 'List entry deleted')
   } catch (err) {
-    setFeedback('error', err instanceof Error ? err.message : 'Delete failed')
+    setFeedback('error', formatApiError(err, 'Delete failed'))
   } finally {
     working.value = false
   }

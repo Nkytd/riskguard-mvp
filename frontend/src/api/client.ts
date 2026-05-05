@@ -44,6 +44,25 @@ export class ApiError extends Error {
   }
 }
 
+export function formatApiError(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) {
+    if (error.code === 401) {
+      return 'Session expired. Sign in again.'
+    }
+    if (error.code === 403) {
+      return 'You do not have permission to perform this action.'
+    }
+    return error.message || fallback
+  }
+  if (error instanceof TypeError) {
+    return 'Network error. Check that the backend service is running and try again.'
+  }
+  if (error instanceof Error) {
+    return error.message || fallback
+  }
+  return fallback
+}
+
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
 }
@@ -80,11 +99,22 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     headers.set('Authorization', `Bearer ${token}`)
   }
 
-  const response = await fetch(path, {
-    ...init,
-    headers,
-  })
-  const payload = (await response.json()) as ApiResponse<T>
+  let response: Response
+  try {
+    response = await fetch(path, {
+      ...init,
+      headers,
+    })
+  } catch (error) {
+    throw new ApiError(formatApiError(error, 'Request failed'), 0)
+  }
+
+  let payload: ApiResponse<T>
+  try {
+    payload = (await response.json()) as ApiResponse<T>
+  } catch {
+    throw new ApiError(response.statusText || 'Invalid server response', response.status)
+  }
   if (!response.ok || payload.code !== 0) {
     if (response.status === 401 || response.status === 403 || payload.code === 401 || payload.code === 403) {
       clearSession()

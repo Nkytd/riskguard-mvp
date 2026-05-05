@@ -31,8 +31,16 @@
         </button>
       </form>
 
-      <div v-if="error" class="alert alert-error" role="alert">{{ error }}</div>
-      <div v-if="loading && page.records.length === 0" class="skeleton-panel compact-skeleton" aria-label="Loading rules">
+      <StateBlock
+        v-if="error && page.records.length === 0"
+        action-label="Retry"
+        :description="error"
+        title="Rules unavailable"
+        variant="error"
+        @action="load(1, false)"
+      />
+      <div v-else-if="error" class="alert alert-error" role="alert">{{ error }}</div>
+      <div v-else-if="loading && page.records.length === 0" class="skeleton-panel compact-skeleton" aria-label="Loading rules">
         <span v-for="item in 8" :key="item" />
       </div>
 
@@ -63,7 +71,13 @@
               <td class="numeric">v{{ rule.version }}</td>
             </tr>
             <tr v-if="page.records.length === 0">
-              <td class="empty-table" colspan="6">No rules found</td>
+              <td class="empty-table" colspan="6">
+                <StateBlock
+                  compact
+                  description="Create a rule or loosen the current filters to see more records."
+                  title="No rules found"
+                />
+              </td>
             </tr>
           </tbody>
         </table>
@@ -163,7 +177,12 @@
             <span>{{ formatDateTime(version.createdAt) }}</span>
             <small>{{ version.publishNote || 'No note' }}</small>
           </article>
-          <p v-if="versions.length === 0" class="empty-copy">No published versions</p>
+          <StateBlock
+            v-if="versions.length === 0"
+            compact
+            description="Publish this rule to create a versioned snapshot."
+            title="No published versions"
+          />
         </div>
       </section>
     </section>
@@ -173,10 +192,12 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { Check, EditPen, Plus, Search, Switch, Upload } from '@element-plus/icons-vue'
+import StateBlock from './StateBlock.vue'
 import {
   createRule,
   disableRule,
   enableRule,
+  formatApiError,
   loadRule,
   loadRuleVersions,
   loadRules,
@@ -258,7 +279,7 @@ async function load(pageNo = page.pageNo, keepSelection = true) {
       await selectRule(page.records[0])
     }
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load rules'
+    error.value = formatApiError(err, 'Failed to load rules')
   } finally {
     loading.value = false
   }
@@ -326,7 +347,7 @@ async function save() {
     await selectRule(saved)
     setFeedback('success', form.id ? 'Rule saved' : 'Rule created')
   } catch (err) {
-    setFeedback('error', err instanceof Error ? err.message : 'Save failed')
+    setFeedback('error', formatApiError(err, 'Save failed'))
   } finally {
     working.value = false
   }
@@ -339,7 +360,7 @@ async function validateExpression() {
     const result = await validateRuleExpression(form.expression)
     setFeedback(result.valid ? 'success' : 'error', result.message)
   } catch (err) {
-    setFeedback('error', err instanceof Error ? err.message : 'Validation failed')
+    setFeedback('error', formatApiError(err, 'Validation failed'))
   } finally {
     working.value = false
   }
@@ -357,7 +378,7 @@ async function toggleStatus() {
     await load(page.pageNo, true)
     setFeedback('success', updated.status === 'ENABLED' ? 'Rule enabled' : 'Rule disabled')
   } catch (err) {
-    setFeedback('error', err instanceof Error ? err.message : 'Status update failed')
+    setFeedback('error', formatApiError(err, 'Status update failed'))
   } finally {
     working.value = false
   }
@@ -377,7 +398,7 @@ async function publish() {
     await load(page.pageNo, true)
     setFeedback('success', 'Rule published')
   } catch (err) {
-    setFeedback('error', err instanceof Error ? err.message : 'Publish failed')
+    setFeedback('error', formatApiError(err, 'Publish failed'))
   } finally {
     working.value = false
   }

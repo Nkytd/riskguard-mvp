@@ -31,8 +31,16 @@
         </button>
       </form>
 
-      <div v-if="error" class="alert alert-error" role="alert">{{ error }}</div>
-      <div v-if="loading && page.records.length === 0" class="skeleton-panel compact-skeleton" aria-label="Loading decisions">
+      <StateBlock
+        v-if="error && page.records.length === 0"
+        action-label="Retry"
+        :description="error"
+        title="Decision logs unavailable"
+        variant="error"
+        @action="load(1, false)"
+      />
+      <div v-else-if="error" class="alert alert-error" role="alert">{{ error }}</div>
+      <div v-else-if="loading && page.records.length === 0" class="skeleton-panel compact-skeleton" aria-label="Loading decisions">
         <span v-for="item in 8" :key="item" />
       </div>
 
@@ -71,7 +79,13 @@
               <td class="numeric">{{ decision.costMs }} ms</td>
             </tr>
             <tr v-if="page.records.length === 0">
-              <td class="empty-table" colspan="6">No decisions found</td>
+              <td class="empty-table" colspan="6">
+                <StateBlock
+                  compact
+                  description="Submit a risk decision or adjust filters to review existing logs."
+                  title="No decisions found"
+                />
+              </td>
             </tr>
           </tbody>
         </table>
@@ -173,7 +187,13 @@
                   <td>{{ rule.hitDetail }}</td>
                 </tr>
                 <tr v-if="hitRules.length === 0">
-                  <td class="empty-table compact-empty" colspan="5">No hit rules</td>
+                  <td class="empty-table compact-empty" colspan="5">
+                    <StateBlock
+                      compact
+                      description="This decision completed without a rule hit snapshot."
+                      title="No hit rules"
+                    />
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -181,7 +201,12 @@
         </section>
       </template>
 
-      <p v-else class="empty-copy">Select a decision to inspect its trace and hit rules.</p>
+      <StateBlock
+        v-else
+        compact
+        description="Pick a row from the decision log to inspect trace metadata and hit rules."
+        title="No decision selected"
+      />
     </section>
   </section>
 </template>
@@ -189,7 +214,8 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { RefreshRight, Search } from '@element-plus/icons-vue'
-import { loadDecisionHitRules, loadDecisionLog, loadDecisionLogs } from '../api/client'
+import StateBlock from './StateBlock.vue'
+import { formatApiError, loadDecisionHitRules, loadDecisionLog, loadDecisionLogs } from '../api/client'
 import type { DecisionHitRule, DecisionLog, EventType, RiskDecisionOutcome } from '../api/types'
 
 const eventTypes: EventType[] = ['LOGIN', 'PAYMENT']
@@ -247,7 +273,7 @@ async function load(pageNo = page.pageNo, keepSelection = true) {
       await selectDecision(page.records[0])
     }
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load decisions'
+    error.value = formatApiError(err, 'Failed to load decisions')
   } finally {
     loading.value = false
   }
@@ -278,7 +304,7 @@ async function selectDecision(decision: DecisionLog) {
     hitRules.value = rules.length > 0 ? rules : detail.hitRules
   } catch (err) {
     hitRules.value = decision.hitRules
-    setFeedback('error', err instanceof Error ? err.message : 'Failed to load decision detail')
+    setFeedback('error', formatApiError(err, 'Failed to load decision detail'))
   } finally {
     detailLoading.value = false
   }
